@@ -14,7 +14,7 @@ RUN pip install -r requirements.txt
 
 EXPOSE  5000
 
-CMD gunicorn -b :5000 --access-logfile - --error-logfile - pets:app
+CMD gunicorn -b :5000 --reload --access-logfile - --error-logfile - pets:app
 
 
 
