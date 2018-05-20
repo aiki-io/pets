@@ -1,9 +1,12 @@
 from flask import jsonify, request, abort
 from flask.views import MethodView
 from app.api import bp
+from app.main.decorators import app_required
 
 
 class PetView(MethodView):
+
+    decorators = [app_required]
 
     pets = [
         {
