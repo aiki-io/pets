@@ -4,7 +4,7 @@ from app.api import bp
 from app.main.decorators import app_required
 
 
-class PetView(MethodView):
+class PetApi(MethodView):
 
     decorators = [app_required]
 
@@ -75,7 +75,7 @@ class PetView(MethodView):
         return jsonify({}), 204
 
 
-pet_view = PetView.as_view('pet_api')
+pet_view = PetApi.as_view('pet_api')
 bp.add_url_rule(
     '/pets/',
     defaults={'pet_id': None},

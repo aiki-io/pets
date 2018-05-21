@@ -5,9 +5,11 @@ services:
     image: aikiio/pets
     container_name: pets_app_1
     ports:
-      - "5000:5000"
+      - 5000:5000
     volumes:
       - .:/opt/pets
+    environment:
+      - MONGODB_HOST=mongodb
     links:
       - db:mongodb
     depends_on:
@@ -16,4 +18,7 @@ services:
   db:
     image: mongo:3.6
     container_name: pets_db_1
+    ports:
+      - 27017:27017
+
   
