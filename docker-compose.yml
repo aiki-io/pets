@@ -20,5 +20,7 @@ services:
     container_name: pets_db_1
     ports:
       - 27017:27017
+    volumes:
+      - ./db:/data/db
 
   
