@@ -1,2 +1,10 @@
+.git
+.gitignore
+.dockerignore
+.idea
+__pycache__
 db
+venv
+
+
 

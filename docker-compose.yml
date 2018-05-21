@@ -6,8 +6,6 @@ services:
     container_name: pets_app_1
     ports:
       - 5000:5000
-    volumes:
-      - .:/opt/pets
     environment:
       - MONGODB_HOST=mongodb
     links:
