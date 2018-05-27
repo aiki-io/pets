@@ -48,8 +48,8 @@ class AccessApi(MethodView):
             abort(400)
 
     def post(self):
-        app_id = request.json['app_id']
-        app_secret = request.json['app_secret']
+        app_id = request.json.get('app_id')
+        app_secret = request.json.get('app_secret')
         if not app_id or not app_secret:
                 error = {
                     'code': 'MISSING_APP_ID_OR_APP_SECRET'
