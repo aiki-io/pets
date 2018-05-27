@@ -1,13 +1,13 @@
 from flask import Flask
 from flask_bcrypt import Bcrypt
 from flask_mongoengine import MongoEngine
-from config import Config
+from config import BaseConfig
 
 db = MongoEngine()
 bcrypt = Bcrypt()
 
 
-def create_app(config_class=Config):
+def create_app(config_class=BaseConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
     db.init_app(app)
