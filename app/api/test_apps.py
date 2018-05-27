@@ -4,7 +4,7 @@ import pytest
 from mongoengine.connection import _get_db
 from app import create_app
 from config import TestConfig
-from app.models import Access
+from app.api.models import Access
 
 
 class TestApp:

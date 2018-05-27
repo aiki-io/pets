@@ -4,7 +4,7 @@ from flask.views import MethodView
 from flask import request, abort, jsonify
 
 from app import bcrypt
-from app.models import App, Access
+from app.api.models import App, Access
 from app.api import bp
 
 
