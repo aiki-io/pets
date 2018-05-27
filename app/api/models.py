@@ -23,7 +23,8 @@ class Store(db.Document):
     state = db.StringField(db_field='s')
     zip = db.StringField(db_field='z')
     phone = db.StringField(db_field='p')
+    live = db.BooleanField(db_field='live', default=True)
 
     meta = {
-        'indexes': [('external_id')]
+        'indexes': [('external_id', 'live')]
     }

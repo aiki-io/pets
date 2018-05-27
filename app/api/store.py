@@ -55,12 +55,18 @@ class StoreApi(MethodView):
     decorators = [app_required]
 
     def __init__(self):
-        if request.method != 'GET'and not request.json:
-            abort(400)
+        if (
+            request.method != 'GET'
+            and request.method != 'DELETE'
+        ) and not request.json:
+                abort(400)
 
     def get(self, store_id):
         if store_id:
-            store = Store.objects.filter(external_id=store_id).first()
+            store = Store.objects.filter(
+                external_id=store_id,
+                live=True
+            ).first()
             if store:
                 response = {
                     'result': 'ok',
@@ -70,7 +76,7 @@ class StoreApi(MethodView):
             else:
                 return jsonify({}), 404
         else:
-            stores = Store.objects.all()
+            stores = Store.objects.filter(live=True)
             response = {
                 'result': 'ok',
                 'stores': stores_obj(stores)
@@ -93,7 +99,7 @@ class StoreApi(MethodView):
                 city=store_json.get('city'),
                 state=store_json.get('state'),
                 zip=store_json.get('zip'),
-                phone=store_json.get('phone')
+                phone=store_json.get('phone'),
             )
             store.save()
             response = {
@@ -103,10 +109,43 @@ class StoreApi(MethodView):
             return jsonify(response), 201
 
     def put(self, store_id):
-        pass
+        store = Store.objects.filter(
+            external_id=store_id,
+            live=True
+        ).first()
+        if not store:
+            return jsonify({}), 404
+        store_json = request.json
+        error = best_match(Draft4Validator(SCHEMA).iter_errors(store_json))
+        if error:
+            return jsonify(
+                {'error': error.message}
+
+            ), 400
+        else:
+            store.neighborhood = store_json.get('neighborhood')
+            store.street_adress = store_json.get('street_adress')
+            store.city = store_json.get('city')
+            store.state = store_json.get('state')
+            store.zip = store_json.get('zip')
+            store.phone = store_json.get('phone')
+            store.save()
+            response = {
+                'result': 'ok',
+                'store': store_obj(store)
+            }
+            return jsonify(response), 200
 
     def delete(self, store_id):
-        pass
+        store = Store.objects.filter(
+            external_id=store_id,
+            live=True
+        ).first()
+        if not store:
+            return jsonify({}), 404
+        store.live = False
+        store.save()
+        return jsonify({}), 204
 
 
 store_view = StoreApi.as_view('store_api')
@@ -123,5 +162,5 @@ bp.add_url_rule('/stores/',
                 )
 bp.add_url_rule('/stores/<string:store_id>',
                 view_func=store_view,
-                methods=['GET', 'PUT', 'DELETE',]
+                methods=['GET', 'PUT', 'DELETE', ]
                 )
