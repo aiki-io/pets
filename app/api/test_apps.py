@@ -21,7 +21,8 @@ class TestApp:
         db.client.drop_database(db)
         app_context.pop()
 
-    def help_create_app(self, client):
+    @staticmethod
+    def create_app(client):
             payload = json.dumps({
                     'app_id': 'pet_client',
                     'app_secret': 'secret'
@@ -32,7 +33,8 @@ class TestApp:
                 content_type='application/json'
             )
 
-    def help_create_token(self, client):
+    @staticmethod
+    def create_token(client):
             payload = json.dumps({
                  'app_id': 'pet_client',
                  'app_secret': 'secret'
@@ -46,7 +48,7 @@ class TestApp:
             return json.loads(rq.data.decode('utf-8'))['token']
 
     def test_create_app(self, client):
-        rq = self.help_create_app(client)
+        rq = TestApp.create_app(client)
         assert rq.status_code == 200
 
     def test_create_app_missing_secret(self, client):
@@ -61,17 +63,17 @@ class TestApp:
         assert 'MISSING_APP_ID_OR_APP_SECRET' in str(rq.data)
 
     def test_create_app_double_registration(self, client):
-        self.help_create_app(client)
-        rq = self.help_create_app(client)
+        TestApp.create_app(client)
+        rq = TestApp.create_app(client)
         assert 'APP_ID_ALREADY_EXISTS' in str(rq.data)
 
     def test_create_token(self, client):
-        self.help_create_app(client)
-        token = self.help_create_token(client)
+        TestApp.create_app(client)
+        token = TestApp.create_token(client)
         assert token
 
     def test_create_token_missing_secret(self, client):
-            self.help_create_app(client)
+            TestApp.create_app(client)
             payload = json.dumps({
                  'app_id': 'pet_client',
              })
@@ -83,7 +85,7 @@ class TestApp:
             assert 'MISSING_APP_ID_OR_APP_SECRET' in str(rq.data)
 
     def test_create_token_wrong_secret(self, client):
-            self.help_create_app(client)
+            TestApp.create_app(client)
             payload = json.dumps({
                 'app_id': 'pet_client',
                 'app_secret': 'bogus'
@@ -96,8 +98,8 @@ class TestApp:
             assert 'INVALID_CREDENTIALS' in str(rq.data)
 
     def test_token_works(self, client):
-        self.help_create_app(client)
-        token = self.help_create_token(client)
+        TestApp.create_app(client)
+        token = TestApp.create_token(client)
         rq = client.get(
             '/api/pets/',
             headers={
@@ -109,8 +111,8 @@ class TestApp:
         assert rq.status_code == 200
 
     def test_wrong_token(self, client):
-        self.help_create_app(client)
-        self.help_create_token(client)
+        TestApp.create_app(client)
+        TestApp.create_token(client)
 
         rq = client.get(
             '/api/pets/',
@@ -123,8 +125,8 @@ class TestApp:
         assert rq.status_code == 403
 
     def test_expired_token(self, client):
-        self.help_create_app(client)
-        token = self.help_create_token(client)
+        TestApp.create_app(client)
+        token = TestApp.create_token(client)
         now = dt.datetime.utcnow().replace(second=0, microsecond=0)
         expires = now + dt.timedelta(days=-31)
         access = Access.objects.first()
