@@ -85,7 +85,7 @@ bp.add_url_rule(
 bp.add_url_rule('/pets/', view_func=pet_view, methods=['POST'])
 
 bp.add_url_rule(
-    '/pets/<int:pet_id>',
+    '/pets/<pet_id>',
     view_func=pet_view,
     methods=['GET', 'PUT', 'DELETE', ]
 )

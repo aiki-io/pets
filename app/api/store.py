@@ -181,7 +181,7 @@ bp.add_url_rule('/stores/',
                 view_func=store_view,
                 methods=['POST', ]
                 )
-bp.add_url_rule('/stores/<string:store_id>',
+bp.add_url_rule('/stores/<store_id>',
                 view_func=store_view,
                 methods=['GET', 'PUT', 'DELETE', ]
                 )
