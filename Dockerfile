@@ -5,6 +5,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF505
     apt-get update && \
     apt-get install -y \
     mongodb-org-shell \
+    mongodb-org-tools \
     gcc
 
 RUN mkdir /opt/pets
