@@ -5,7 +5,7 @@ from app import create_app
 from config import TestConfig
 from app.api.models import Pet
 from app.api.test_apps import help_create_app, help_create_token
-from app.api.test_stores import help_create_store
+from app.api.test_stores import help_create_store, help_import_test_data
 
 
 def help_create_pet(client, store, token):
@@ -105,3 +105,27 @@ class TestPets:
                 })
         assert rv.status_code == 204
         assert Pet.objects.filter(live=False).count() == 1
+
+    def test_pet_pagination(self, client):
+        help_import_test_data('store', 'data/stores.json')
+        help_import_test_data('pet', 'data/pets.json')
+        help_create_app(client)
+        token = help_create_token(client)
+        rv = client.get(
+            '/api/pets/',
+            content_type='application/json',
+            headers={
+                'X-APP-ID': 'pet_client',
+                            'X-APP-TOKEN': token,
+            }
+        )
+        assert 'next' in str(rv.data)
+        rv = client.get(
+                    '/api/pets/?page=2',
+                    content_type='application/json',
+                    headers={
+                        'X-APP-ID': 'pet_client',
+                                    'X-APP-TOKEN': token,
+                    }
+                )
+        assert 'previous' in str(rv.data)
