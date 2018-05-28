@@ -1,6 +1,5 @@
-import json
 import uuid
-from flask import jsonify, request, abort, render_template
+from flask import jsonify, request, abort
 from flask.views import MethodView
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import best_match
@@ -26,6 +25,8 @@ SCHEMA = {
     ]
 }
 
+STORES_PER_PAGE = 10
+
 
 def store_obj(doc):
     return {
@@ -47,8 +48,10 @@ def store_obj(doc):
 
 
 def stores_obj(stores):
-    stores = []
-    return stores
+    stores_obj = []
+    for store in stores.items:
+        stores_obj.append(store_obj(store))
+    return stores_obj
 
 
 class StoreApi(MethodView):
@@ -70,17 +73,35 @@ class StoreApi(MethodView):
             if store:
                 response = {
                     'result': 'ok',
+
                     'store': store_obj(store)
                 }
                 return jsonify(response), 200
-            else:
-                return jsonify({}), 404
+
         else:
             stores = Store.objects.filter(live=True)
+            page = int(request.args.get('page', 1))
+            stores = stores.paginate(page=page, per_page=STORES_PER_PAGE)
             response = {
                 'result': 'ok',
-                'stores': stores_obj(stores)
+                'stores': stores_obj(stores),
+                'links': [
+                        {
+                            'href': f'/api/stores/?page={page}',
+                            'rel': 'self'
+                        }
+                    ],
             }
+            if stores.has_prev:
+                response['links'].append({
+                    'href': f'/api/stores/?page={stores.prev_num}',
+                    'rel': 'previous'
+                })
+            if stores.has_next:
+                response['links'].append({
+                    'href': f'/api/stores/?page={stores.next_num}',
+                    'rel': 'next'
+                })
             return jsonify(response), 200
 
     def post(self):
