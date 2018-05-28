@@ -128,7 +128,7 @@ class PetApi(MethodView):
                 pet_json.get('received_date'),
                 '%Y-%m-%dT%H:%M:%SZ'
             )
-        except e:
+        except: # noqa
             return jsonify({'error': 'INVALID_DATE'}), 400
 
         pet = Pet(
@@ -148,13 +148,53 @@ class PetApi(MethodView):
         }
         return jsonify(response), 201
 
-            
-
     def put(self, pet_id):
-        pass
+        pet = Pet.objects.filter(external_id=pet_id).first()
+        if not pet:
+            return jsonify({}), 404
+        pet_json = request.json
+        error = best_match(Draft4Validator(SCHEMA).iter_errors(pet_json))
+        if error:
+            return jsonify({
+                'error': error.message
+            }), 400
+        store = Store.objects.filter(
+            external_id=pet_json.get('store')
+        ).first()
+        if not store:
+            error = {
+                'code': 'STORE_NOT_FOUND'
+            }
+            return jsonify({'error': error}), 400
+        try:
+            received_date = dt.datetime.strptime(
+                pet_json.get('received_date'),
+                '%Y-%m-%dT%H:%M:%SZ'
+            )
+        except: # noqa
+            return jsonify({'error': 'INVALID_DATE'}), 400
+
+        pet.name = pet_json.get('name')
+        pet.species = pet_json.get('species')
+        pet.breed = pet_json.get('breed')
+        pet.age = pet_json.get('age')
+        pet.store = store
+        pet.price = pet_json.get('price')
+        pet.received_date = received_date
+        pet.save()
+        response = {
+            'result': 'ok',
+            'pet': pet_obj(pet)
+        }
+        return jsonify(response), 200
 
     def delete(self, pet_id):
-        pass
+        pet = Pet.objects.filter(external_id=pet_id).first()
+        if not pet:
+            return jsonify({}), 404
+        pet.live = False
+        pet.save()
+        return jsonify({}), 204
 
 
 pet_view = PetApi.as_view('pet_api')
