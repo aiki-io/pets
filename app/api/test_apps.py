@@ -33,7 +33,7 @@ def help_create_token(client):
     return json.loads(rq.data.decode('utf-8'))['token']
 
 
-class TestApp:
+class TestApps:
 
     @pytest.fixture(scope='function')
     def client(self):

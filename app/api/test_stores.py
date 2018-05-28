@@ -39,7 +39,7 @@ def help_import_test_data(collection, datafile):
     subprocess.call(command, shell=True)
 
 
-class TestStore:
+class TestStores:
     @pytest.fixture(scope='function')
     def client(self):
         app = create_app(TestConfig)
