@@ -1,9 +1,12 @@
-
+import uuid
+import datetime as dt
 from flask import jsonify, request, abort
 from flask.views import MethodView
+from jsonschema import Draft4Validator
+from jsonschema.exceptions import best_match
 from app.api import bp
 from app.api.store import store_obj
-from app.api.models import Pet
+from app.api.models import Pet, Store
 from app.main.decorators import app_required
 
 
@@ -18,7 +21,7 @@ SCHEMA = {
         'price': {'type': 'string'},
         'received_date': {
             'type': 'string',
-            'pattern': '^[0-9]{4}-[0-9]{2)-[0-9{2}T[0-9]{2}:[0-9]{2}-[0-9]{2}Z$' # noqa
+            'pattern': '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' # noqa
         }
     },
     'required': [
@@ -41,7 +44,7 @@ def pet_obj(pet, store=True):
         'breed': pet.breed,
         'age': pet.age,
         'store': store_obj(pet.store),
-        'price': pet.price,
+        'price': str(pet.price),
         'received_date': str(pet.received_date.isoformat()[0:19]) + 'Z',
         'links': [
             {
@@ -108,7 +111,44 @@ class PetApi(MethodView):
             return jsonify(response), 200
 
     def post(self):
-        pass
+        pet_json = request.json
+        error = best_match(Draft4Validator(SCHEMA).iter_errors(pet_json))
+        if error:
+            return jsonify({
+                'error': error.message
+            }), 400
+        store = Store.objects.filter(external_id=pet_json.get('store')).first()
+        if not store:
+            error = 'STORE_NOT_FOUND'
+            return jsonify({
+                'error': error
+            }), 400
+        try:
+            received_date = dt.datetime.strptime(
+                pet_json.get('received_date'),
+                '%Y-%m-%dT%H:%M:%SZ'
+            )
+        except e:
+            return jsonify({'error': 'INVALID_DATE'}), 400
+
+        pet = Pet(
+            external_id=str(uuid.uuid4()),
+            name=pet_json.get('name'),
+            species=pet_json.get('species'),
+            breed=pet_json.get('breed'),
+            age=pet_json.get('age'),
+            store=store,
+            price=pet_json.get('price'),
+            received_date=received_date
+        )
+        pet.save()
+        response = {
+            'result': 'ok',
+            'pet': pet_obj(pet)
+        }
+        return jsonify(response), 201
+
+            
 
     def put(self, pet_id):
         pass
