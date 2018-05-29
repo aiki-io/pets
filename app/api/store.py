@@ -5,7 +5,8 @@ from jsonschema import Draft4Validator
 from jsonschema.exceptions import best_match
 from app.api import bp
 from app.main.decorators import app_required
-from app.api.models import Store
+from app.api.models import Store, Pet
+from app.api.pets import pets_obj
 
 SCHEMA = {
     'type': 'object',
@@ -26,6 +27,7 @@ SCHEMA = {
 }
 
 STORES_PER_PAGE = 10
+PETS_PER_PAGE = 10
 
 
 def store_obj(doc):
@@ -71,11 +73,40 @@ class StoreApi(MethodView):
                 live=True
             ).first()
             if store:
-                response = {
-                    'result': 'ok',
+                if 'pets' in request.url:
+                    pets = Pet.objects.filter(store=store, live=True)
+                    page = int(request.args.get('page'), 1)
+                    pets = pets.paginate(page=page, per_page=PETS_PER_PAGE)
+                    response = {
+                        'result': 'ok',
+                        'store': store_obj(store),
+                        'pets': pets_obj(pets, store=False),
+                        'links': [
+                            {
+                                'href': f'/stores/pets/{store_id}/pets/?'
+                                        f'page={page}',
+                                'rel': 'self'
+                            }
+                        ]
+                    }
+                    if pets.has_prev:
+                        response['links'].append({
+                            'href': f'/stores/pets/{store_id}/pets/?'
+                                    f'page={pets.prev_num}',
+                            'rel': 'previous'
+                        })
+                    if pets.has_next:
+                        response['links'].append({
+                             'href': f'/stores/pets/{store_id}/pets/?'
+                                     f'page={pets.next_num}',
+                             'rel': 'previous'
+                     })
+                else:
+                    response = {
+                        'result': 'ok',
 
-                    'store': store_obj(store)
-                }
+                        'store': store_obj(store)
+                    }
                 return jsonify(response), 200
 
         else:
@@ -185,3 +216,8 @@ bp.add_url_rule('/stores/<store_id>',
                 view_func=store_view,
                 methods=['GET', 'PUT', 'DELETE', ]
                 )
+bp.add_url_rule(
+    '/stores/<store_id>/pets',
+    view_func=store_view,
+    methods=['GET', ]
+)

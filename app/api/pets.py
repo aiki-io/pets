@@ -5,7 +5,6 @@ from flask.views import MethodView
 from jsonschema import Draft4Validator
 from jsonschema.exceptions import best_match
 from app.api import bp
-from app.api.store import store_obj
 from app.api.models import Pet, Store
 from app.main.decorators import app_required
 
@@ -37,13 +36,12 @@ PETS_PER_PAGE = 10
 
 
 def pet_obj(pet, store=True):
-    return {
+    d = {
         'id': pet.external_id,
         'name': pet.name,
         'species': pet.species,
         'breed': pet.breed,
         'age': pet.age,
-        'store': store_obj(pet.store),
         'price': str(pet.price),
         'received_date': str(pet.received_date.isoformat()[0:19]) + 'Z',
         'links': [
@@ -53,13 +51,18 @@ def pet_obj(pet, store=True):
             }
         ]
     }
+    if store:
+        from app.api.store import store_obj
+        d['store'] = store_obj(pet.store)
+
+    return d
 
 
 def pets_obj(pets, store=True):
-    pets_obj = []
+    d = []
     for pet in pets.items:
-        pets_obj.append(pet_obj(pet))
-    return pets_obj
+        d.append(pet_obj(pet, store=store))
+    return d
 
 
 class PetApi(MethodView):
