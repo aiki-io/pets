@@ -36,7 +36,7 @@ PETS_PER_PAGE = 10
 
 
 def pet_obj(pet, store=True):
-    d = {
+    pet_obj = {
         'id': pet.external_id,
         'name': pet.name,
         'species': pet.species,
@@ -53,16 +53,16 @@ def pet_obj(pet, store=True):
     }
     if store:
         from app.api.store import store_obj
-        d['store'] = store_obj(pet.store)
+        pet_obj['store'] = store_obj(pet.store)
 
-    return d
+    return pet_obj
 
 
 def pets_obj(pets, store=True):
-    d = []
+    pets_obj = []
     for pet in pets.items:
-        d.append(pet_obj(pet, store=store))
-    return d
+        pets_obj.append(pet_obj(pet, store=store))
+    return pets_obj
 
 
 class PetApi(MethodView):

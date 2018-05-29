@@ -83,9 +83,13 @@ class StoreApi(MethodView):
                         'pets': pets_obj(pets, store=False),
                         'links': [
                             {
-                                'href': f'/stores/pets/{store_id}/pets/?'
+                                'href': f'/api/stores/pets/{store_id}/pets/?'
                                         f'page={page}',
                                 'rel': 'self'
+                            },
+                            {
+                                'href': f'/api/stores/{store_id}/pets',
+                                'rel': 'pets'
                             }
                         ]
                     }
@@ -100,12 +104,17 @@ class StoreApi(MethodView):
                              'href': f'/stores/pets/{store_id}/pets/?'
                                      f'page={pets.next_num}',
                              'rel': 'previous'
-                     })
+                        })
                 else:
                     response = {
                         'result': 'ok',
 
-                        'store': store_obj(store)
+                        'store': store_obj(store),
+                        'links': [
+                            {
+                                'href': f'/api/stores/{store_id}/pets',
+                                'rel': 'pets'
+                                }]
                     }
                 return jsonify(response), 200
 
